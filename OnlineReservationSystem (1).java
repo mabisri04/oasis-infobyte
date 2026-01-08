@@ -1,0 +1,326 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
+
+/**
+ * Represents a single registered user for login simulation.
+ */
+class User {
+    private String username;
+    private String password;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+}
+
+/**
+ * Represents a single ticket reservation.
+ */
+class Ticket {
+    private String pnrNumber;
+    private String name;
+    private int trainNumber;
+    private String trainName;
+    private String classType;
+    private String dateOfJourney;
+    private String fromStation;
+    private String toDestination;
+
+    // Constructor
+    public Ticket(String pnrNumber, String name, int trainNumber, String trainName, 
+                  String classType, String dateOfJourney, String fromStation, String toDestination) {
+        this.pnrNumber = pnrNumber;
+        this.name = name;
+        this.trainNumber = trainNumber;
+        this.trainName = trainName;
+        this.classType = classType;
+        this.dateOfJourney = dateOfJourney;
+        this.fromStation = fromStation;
+        this.toDestination = toDestination;
+    }
+
+    public String getPnrNumber() {
+        return pnrNumber;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    // Displays the full ticket information
+    @Override
+    public String toString() {
+        return String.format(
+            "|---------------------------------------------------------|\n" +
+            "| PNR Number: %-42s |\n" +
+            "| Passenger Name: %-38s |\n" +
+            "| Train: %d - %-38s |\n" +
+            "| Class: %-15s Date: %-25s |\n" +
+            "| Route: %s -> %s\n" +
+            "|---------------------------------------------------------|",
+            pnrNumber, name, trainNumber, trainName, classType, dateOfJourney, fromStation, toDestination
+        );
+    }
+}
+
+/**
+ * Main class for the Online Reservation System (Console Based).
+ * Includes Login, Reservation, and Cancellation Modules.
+ */
+public class OnlineReservationSystem {
+    // In-memory data storage
+    private List<Ticket> ticketList = new ArrayList<>();
+    private Map<String, User> userDatabase = new HashMap<>();
+    private Scanner scanner = new Scanner(System.in);
+    private boolean isAuthenticated = false;
+    private Random random = new Random();
+
+    // Simulated Train Data
+    private Map<Integer, String> trainSchedule = new HashMap<>();
+
+    public static void main(String[] args) {
+        OnlineReservationSystem system = new OnlineReservationSystem();
+        system.initializeData();
+        system.start();
+    }
+
+    /**
+     * Initializes dummy user accounts and train schedules.
+     */
+    private void initializeData() {
+        // Setup initial users (Login Form)
+        userDatabase.put("admin", new User("admin", "admin123"));
+        userDatabase.put("user1", new User("user1", "pass456"));
+
+        // Setup train schedule
+        trainSchedule.put(12020, "Shatabdi Express");
+        trainSchedule.put(12560, "Shiv Ganga Express");
+        trainSchedule.put(12809, "Howrah Mail");
+
+        System.out.println("--- Console-Based Online Reservation System ---");
+        System.out.println("Available Users: admin/admin123, user1/pass456");
+    }
+
+    /**
+     * Starts the application loop.
+     */
+    public void start() {
+        // 1. Initial Login
+        loginForm();
+
+        if (!isAuthenticated) {
+            System.out.println("Maximum login attempts exceeded. System shutting down.");
+            scanner.close();
+            return;
+        }
+
+        // 2. Main Menu (Reservation & Cancellation)
+        mainMenu();
+        scanner.close();
+    }
+
+    // ===================================
+    // 1. Login Module
+    // ===================================
+
+    private void loginForm() {
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 3;
+
+        while (attempts < MAX_ATTEMPTS && !isAuthenticated) {
+            System.out.println("\n--- Login Form ---");
+            System.out.print("Enter Login ID: ");
+            String username = scanner.nextLine();
+            System.out.print("Enter Password: ");
+            String password = scanner.nextLine();
+
+            User user = userDatabase.get(username);
+
+            if (user != null && user.getPassword().equals(password)) {
+                isAuthenticated = true;
+                System.out.println("\nAuthentication Successful! Welcome, " + username + ".");
+            } else {
+                attempts++;
+                System.out.println("Invalid Login ID or Password. Attempt " + attempts + " of " + MAX_ATTEMPTS);
+            }
+        }
+    }
+
+    // ===================================
+    // Main Menu Handler
+    // ===================================
+
+    private void mainMenu() {
+        boolean running = true;
+        while (running) {
+            System.out.println("\n--- Main System Menu ---");
+            System.out.println("1. New Reservation");
+            System.out.println("2. Cancel Ticket");
+            System.out.println("3. View All Reservations");
+            System.out.println("4. Logout & Exit");
+            System.out.print("Enter choice: ");
+
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (choice) {
+                    case 1:
+                        reservationSystem();
+                        break;
+                    case 2:
+                        cancellationForm();
+                        break;
+                    case 3:
+                        viewAllReservations();
+                        break;
+                    case 4:
+                        running = false;
+                        System.out.println("Logging out. Thank you for using the system.");
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please enter 1, 2, 3, or 4.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a numerical choice.");
+                scanner.nextLine(); // Clear the invalid input
+            }
+        }
+    }
+
+    // ===================================
+    // 2. Reservation Module
+    // ===================================
+
+    private void reservationSystem() {
+        System.out.println("\n--- Reservation System ---");
+
+        System.out.print("Enter Passenger Name: ");
+        String name = scanner.nextLine();
+
+        int trainNumber = -1;
+        while (trainNumber == -1) {
+            try {
+                System.out.print("Enter Train Number (e.g., 12020): ");
+                trainNumber = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                if (!trainSchedule.containsKey(trainNumber)) {
+                    System.out.println("Error: Train number not found in schedule.");
+                    System.out.println("Available Trains: " + trainSchedule.keySet());
+                    trainNumber = -1; // Loop again
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number for the train number.");
+                scanner.nextLine();
+                trainNumber = -1;
+            }
+        }
+        
+        // Auto-fill Train Name
+        String trainName = trainSchedule.get(trainNumber);
+        System.out.println("Train Name (Auto): " + trainName);
+
+        System.out.print("Enter Class Type (e.g., AC, SL, 3A): ");
+        String classType = scanner.nextLine().toUpperCase();
+        
+        System.out.print("Enter Date of Journey (DD/MM/YYYY): ");
+        String dateOfJourney = scanner.nextLine();
+        
+        System.out.print("Enter From Station: ");
+        String fromStation = scanner.nextLine();
+
+        System.out.print("Enter Destination: ");
+        String toDestination = scanner.nextLine();
+
+        // Generate PNR
+        String pnr = generatePNR();
+
+        // Create and save ticket
+        Ticket newTicket = new Ticket(pnr, name, trainNumber, trainName, 
+                                      classType, dateOfJourney, fromStation, toDestination);
+        ticketList.add(newTicket);
+
+        System.out.println("\n** Reservation Successful **");
+        System.out.println(newTicket);
+        System.out.println("Please note down your PNR number for cancellation.");
+    }
+
+    /**
+     * Helper to generate a unique 8-digit PNR.
+     */
+    private String generatePNR() {
+        // Simple 8-digit random number for PNR simulation
+        return String.format("%08d", random.nextInt(100000000));
+    }
+
+    private void viewAllReservations() {
+        System.out.println("\n--- All Reservations ---");
+        if (ticketList.isEmpty()) {
+            System.out.println("No reservations currently exist.");
+            return;
+        }
+
+        for (Ticket ticket : ticketList) {
+            System.out.println(ticket);
+        }
+    }
+
+    // ===================================
+    // 3. Cancellation Module
+    // ===================================
+
+    private void cancellationForm() {
+        System.out.println("\n--- Cancellation Form ---");
+        System.out.print("Enter PNR number to cancel: ");
+        String pnrToCancel = scanner.nextLine().trim();
+
+        Ticket ticketToCancel = findTicketByPNR(pnrToCancel);
+
+        if (ticketToCancel != null) {
+            System.out.println("\n** Reservation Found **");
+            System.out.println(ticketToCancel);
+
+            System.out.print("\nDo you want to confirm cancellation (Y/N)? ");
+            String confirmation = scanner.nextLine().trim().toUpperCase();
+
+            if (confirmation.equals("Y") || confirmation.equals("OK")) {
+                ticketList.remove(ticketToCancel);
+                System.out.println("\nCancellation Confirmed: Ticket with PNR " + pnrToCancel + " has been cancelled.");
+            } else {
+                System.out.println("\nCancellation aborted. Ticket remains active.");
+            }
+
+        } else {
+            System.out.println("\nError: PNR Number " + pnrToCancel + " not found.");
+        }
+    }
+
+    /**
+     * Helper method to find a ticket by its PNR number.
+     * @param pnr The PNR number to search for.
+     * @return The Ticket object if found, or null otherwise.
+     */
+    private Ticket findTicketByPNR(String pnr) {
+        for (Ticket ticket : ticketList) {
+            if (ticket.getPnrNumber().equals(pnr)) {
+                return ticket;
+            }
+        }
+        return null;
+    }
+}
