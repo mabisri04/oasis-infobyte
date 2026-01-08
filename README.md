@@ -1,16 +1,23 @@
-Online Reservation System, 
-this application is built entirely in Java and simulates the end-to-end booking process using three core, modular components:
+ Train Ticket Booking Application
 
-Login Module: Secure user authentication using in-memory credentials.
+This Java-based console application manages complete railway reservation workflows through three independent modules:
 
-Reservation System: Captures passenger details, features automated train name lookups, and generates a unique 8-digit PNR for every booking.
+User Authentication Module
+Handles secure login verification with hardcoded username/password storage in memory.
 
-Cancellation Form: Allows users to easily search, verify, and confirm the cancellation of tickets using their PNR number.
+Ticket Booking Engine
+- Collects traveler information  
+- Auto-retrieves available train schedules  
+- Generates unique 8-character PNR codes for each reservation  
 
-Key Technical Skills Demonstrated:
+PNR Cancellation Portal
+Enables ticket lookup, validation, and confirmed cancellation by entering the booking reference number.
 
-Object-Oriented Programming (OOP): Used custom User and Ticket classes for structured data.
+Object-Oriented Design 
+Custom `Passenger` and `Booking` classes organize data effectively following OOP principles.
 
-Data Structures: Leveraged ArrayList and HashMap for data persistence (in-memory simulation).
+In-Memory Data Management
+`ArrayList` maintains booking records while `HashMap` provides fast PNR lookups.
 
-Robustness: Implemented try-catch blocks for effective error handling and input validation.
+Production-Ready Features
+Comprehensive exception handling with try-catch ensures graceful error recovery and validates all user inputs.
